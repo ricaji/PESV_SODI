@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PESV - Sodicarga S.A.S</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { min-height: 100%; }
@@ -461,7 +462,16 @@
     @media (max-width: 640px) {
       .firmas { grid-template-columns: 1fr; }
     }
-    /* Al guardar en PDF se imprimen todos los módulos */
+    /* Modo PDF: se muestran todos los módulos y se ocultan los botones */
+    body.modo-pdf::before { display: none; }
+    body.modo-pdf .detalle[hidden] { display: block !important; }
+    body.modo-pdf .item { break-inside: avoid; }
+    body.modo-pdf .btn-fotos,
+    body.modo-pdf .acciones-firma,
+    body.modo-pdf .guardar,
+    body.modo-pdf .miniatura button,
+    body.modo-pdf .conteo-fotos { display: none !important; }
+    /* Al imprimir también se muestran todos los módulos */
     @media print {
       .detalle[hidden] { display: block !important; }
       .item { break-inside: avoid; }
@@ -1023,11 +1033,39 @@
         mensaje.textContent = "Formulario completo y validado.";
       });
 
-      // Imprimir o guardar como PDF (mismas condiciones que Guardar)
-      document.getElementById("btn-imprimir").addEventListener("click", function () {
+      // Imprimir: genera y descarga el PDF (mismas condiciones que Guardar)
+      var btnImprimir = document.getElementById("btn-imprimir");
+      btnImprimir.addEventListener("click", function () {
         revisar();
-        if (this.disabled) return;
-        window.print();
+        if (btnImprimir.disabled) return;
+        if (typeof html2pdf === "undefined") { window.print(); return; }
+
+        var placa = (document.getElementById("placa").value || "vehiculo").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+        var fecha = document.getElementById("fecha").value || "";
+        var nombre = "Preoperacional_" + placa + (fecha ? "_" + fecha : "") + ".pdf";
+
+        btnImprimir.disabled = true;
+        btnImprimir.textContent = "Generando PDF...";
+        document.body.classList.add("modo-pdf");
+        window.scrollTo(0, 0);
+
+        function terminar() {
+          document.body.classList.remove("modo-pdf");
+          btnImprimir.textContent = "Imprimir";
+          revisar();
+        }
+
+        html2pdf().set({
+          margin: [8, 8, 8, 8],
+          filename: nombre,
+          image: { type: "jpeg", quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+          jsPDF: { unit: "mm", format: "letter", orientation: "portrait" },
+          pagebreak: { mode: ["css", "legacy"], avoid: [".item", ".tarjeta", ".firma", ".miniatura"] }
+        }).from(document.body).save().then(terminar).catch(function () {
+          terminar();
+          window.print();
+        });
       });
 
       revisar();

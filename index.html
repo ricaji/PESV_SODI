@@ -1032,11 +1032,12 @@
       var URL_DRIVE = "https://script.google.com/macros/s/AKfycbzgBPZxaCbJ0hxHmktyjJb1-YwhecAlCtcomXfwkJgRVcqUov0W2EVlUaCLUNlzi9l56g/exec";
       var btnImprimir = document.getElementById("btn-imprimir");
 
+      // Nombre del archivo: aammdd PESV PLACA  (ej: 261003 PESV ABC123.pdf)
       function nombreArchivo() {
-        var placa = (document.getElementById("placa").value || "vehiculo").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+        var placa = (document.getElementById("placa").value || "").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
         var fecha = document.getElementById("fecha").value || "";
-        var hora = (document.getElementById("hora").value || "").replace(":", "");
-        return "Preoperacional_" + placa + (fecha ? "_" + fecha : "") + (hora ? "_" + hora : "") + ".pdf";
+        var aammdd = fecha ? fecha.slice(2, 4) + fecha.slice(5, 7) + fecha.slice(8, 10) : "";
+        return aammdd + " PESV " + placa + ".pdf";
       }
 
       function crearPDF(nombre) {

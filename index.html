@@ -427,6 +427,10 @@
       cursor: pointer;
     }
     #btn-imprimir:hover { background: #155fa6; }
+    #btn-imprimir:disabled {
+      background: #b0b0b0;
+      cursor: not-allowed;
+    }
     #btn-guardar {
       font-family: inherit;
       font-size: 1.05rem;
@@ -612,7 +616,7 @@
 
     <div class="guardar">
       <div class="botones-finales">
-        <button type="button" id="btn-imprimir">Imprimir</button>
+        <button type="button" id="btn-imprimir" disabled>Imprimir</button>
         <button type="button" id="btn-guardar" disabled>Guardar</button>
       </div>
       <p id="mensaje-guardar"></p>
@@ -993,6 +997,7 @@
         if (!window.firmas["firma-conductor"].firmado) faltan.push("firma del conductor");
 
         boton.disabled = faltan.length > 0;
+        document.getElementById("btn-imprimir").disabled = faltan.length > 0;
         if (faltan.length) {
           mensaje.className = "";
           mensaje.textContent = "Falta: " + faltan.join(", ") + ".";
@@ -1014,8 +1019,10 @@
         mensaje.textContent = "Formulario completo y validado.";
       });
 
-      // Imprimir o guardar como PDF (disponible en cualquier momento)
+      // Imprimir o guardar como PDF (mismas condiciones que Guardar)
       document.getElementById("btn-imprimir").addEventListener("click", function () {
+        revisar();
+        if (this.disabled) return;
         window.print();
       });
 

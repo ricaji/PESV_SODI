@@ -348,6 +348,98 @@
       line-height: 24px;
       cursor: pointer;
     }
+    /* Firmas */
+    .firmas {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .firma {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #d5dbe3;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+    .firma h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #000000;
+      margin-bottom: 10px;
+    }
+    .firma h2 .obligatorio { color: #e30613; }
+    .firma h2 .opcional {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: #777777;
+    }
+    .firma canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 3 / 1;
+      background: #ffffff;
+      border: 2px dashed #9a9a9a;
+      border-radius: 4px;
+      touch-action: none;
+      cursor: crosshair;
+    }
+    .acciones-firma {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .acciones-firma button {
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      padding: 7px 12px;
+      cursor: pointer;
+    }
+    .btn-limpiar { background: #6c757d; }
+    .btn-limpiar:hover { background: #5a6268; }
+    .btn-subir { background: #1a73c9; }
+    .btn-subir:hover { background: #155fa6; }
+    .firma input[type="file"] { display: none; }
+    /* Guardar */
+    .guardar {
+      margin-top: 24px;
+      text-align: center;
+    }
+    #btn-guardar {
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: #1e9e3a;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 46px;
+      cursor: pointer;
+    }
+    #btn-guardar:hover { background: #18852f; }
+    #btn-guardar:disabled {
+      background: #b0b0b0;
+      cursor: not-allowed;
+    }
+    #mensaje-guardar {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: #e30613;
+    }
+    #mensaje-guardar.ok { color: #1e9e3a; }
+    @media (max-width: 640px) {
+      .firmas { grid-template-columns: 1fr; }
+    }
+    /* Al guardar en PDF se imprimen todos los módulos */
+    @media print {
+      .detalle[hidden] { display: block !important; }
+      .item { break-inside: avoid; }
+      .btn-fotos, .acciones-firma, .guardar, .miniatura button, .conteo-fotos { display: none !important; }
+    }
     @media (max-width: 900px) {
       .grid-modulos { grid-template-columns: repeat(3, 1fr); }
     }
@@ -478,6 +570,32 @@
       <p class="conteo-fotos" id="conteo-fotos">No se han agregado fotos</p>
       <div class="galeria" id="galeria"></div>
     </section>
+
+    <section class="firmas">
+      <div class="firma">
+        <h2>Firma Conductor <span class="obligatorio">*</span></h2>
+        <canvas id="firma-conductor" width="900" height="300"></canvas>
+        <div class="acciones-firma">
+          <button type="button" class="btn-limpiar" data-firma="firma-conductor">Limpiar</button>
+          <button type="button" class="btn-subir" data-firma="firma-conductor">Subir Imagen</button>
+        </div>
+        <input type="file" accept="image/*" data-firma="firma-conductor">
+      </div>
+      <div class="firma">
+        <h2>Firma Responsable de Control <span class="opcional">(opcional)</span></h2>
+        <canvas id="firma-responsable" width="900" height="300"></canvas>
+        <div class="acciones-firma">
+          <button type="button" class="btn-limpiar" data-firma="firma-responsable">Limpiar</button>
+          <button type="button" class="btn-subir" data-firma="firma-responsable">Subir Imagen</button>
+        </div>
+        <input type="file" accept="image/*" data-firma="firma-responsable">
+      </div>
+    </section>
+
+    <div class="guardar">
+      <button type="button" id="btn-guardar" disabled>Guardar</button>
+      <p id="mensaje-guardar"></p>
+    </div>
   </main>
 
   <script>
@@ -740,9 +858,141 @@
         conteo.textContent = fotos.length === 0
           ? "No se han agregado fotos"
           : fotos.length + (fotos.length === 1 ? " foto agregada" : " fotos agregadas");
+        document.dispatchEvent(new Event("fotos-cambio"));
       }
 
       window.obtenerFotos = function () { return fotos.slice(); };
+    })();
+  </script>
+  <script>
+    // Firmas (dibujar con dedo o mouse, o subir imagen)
+    (function () {
+      var firmas = {};
+
+      function crear(id) {
+        var canvas = document.getElementById(id);
+        var ctx = canvas.getContext("2d");
+        var estado = { canvas: canvas, firmado: false };
+        var dibujando = false;
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#000000";
+
+        function punto(e) {
+          var r = canvas.getBoundingClientRect();
+          return {
+            x: (e.clientX - r.left) * (canvas.width / r.width),
+            y: (e.clientY - r.top) * (canvas.height / r.height)
+          };
+        }
+        canvas.addEventListener("pointerdown", function (e) {
+          e.preventDefault();
+          dibujando = true;
+          canvas.setPointerCapture(e.pointerId);
+          var p = punto(e);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p.x + 0.1, p.y + 0.1);
+          ctx.stroke();
+        });
+        canvas.addEventListener("pointermove", function (e) {
+          if (!dibujando) return;
+          var p = punto(e);
+          ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+        });
+        function terminar() {
+          if (!dibujando) return;
+          dibujando = false;
+          estado.firmado = true;
+          document.dispatchEvent(new Event("firma-cambio"));
+        }
+        canvas.addEventListener("pointerup", terminar);
+        canvas.addEventListener("pointercancel", terminar);
+
+        estado.limpiar = function () {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          estado.firmado = false;
+          document.dispatchEvent(new Event("firma-cambio"));
+        };
+        estado.cargar = function (archivo) {
+          var img = new Image();
+          img.onload = function () {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            var esc = Math.min(canvas.width / img.width, canvas.height / img.height);
+            var w = img.width * esc, h = img.height * esc;
+            ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+            URL.revokeObjectURL(img.src);
+            estado.firmado = true;
+            document.dispatchEvent(new Event("firma-cambio"));
+          };
+          img.src = URL.createObjectURL(archivo);
+        };
+        firmas[id] = estado;
+      }
+
+      crear("firma-conductor");
+      crear("firma-responsable");
+
+      document.querySelectorAll(".btn-limpiar").forEach(function (b) {
+        b.addEventListener("click", function () { firmas[b.dataset.firma].limpiar(); });
+      });
+      document.querySelectorAll(".btn-subir").forEach(function (b) {
+        b.addEventListener("click", function () {
+          document.querySelector('input[type="file"][data-firma="' + b.dataset.firma + '"]').click();
+        });
+      });
+      document.querySelectorAll('input[type="file"][data-firma]').forEach(function (inp) {
+        inp.addEventListener("change", function () {
+          if (inp.files[0]) firmas[inp.dataset.firma].cargar(inp.files[0]);
+          inp.value = "";
+        });
+      });
+
+      window.firmas = firmas;
+    })();
+
+    // Validación y botón Guardar
+    (function () {
+      var boton = document.getElementById("btn-guardar");
+      var mensaje = document.getElementById("mensaje-guardar");
+
+      function revisar() {
+        var faltan = [];
+        var datos = 0;
+        document.querySelectorAll("#preoperacional .campo input").forEach(function (i) {
+          if (!i.value.trim() || !i.checkValidity()) datos++;
+        });
+        if (datos) faltan.push(datos + (datos === 1 ? " dato general" : " datos generales"));
+        var items = 0;
+        document.querySelectorAll("#detalles select").forEach(function (s) { if (!s.value) items++; });
+        if (items) faltan.push(items + (items === 1 ? " ítem por evaluar" : " ítems por evaluar"));
+        if (!window.obtenerFotos || window.obtenerFotos().length === 0) faltan.push("al menos 1 foto");
+        if (!window.firmas["firma-conductor"].firmado) faltan.push("firma del conductor");
+
+        boton.disabled = faltan.length > 0;
+        if (faltan.length) {
+          mensaje.className = "";
+          mensaje.textContent = "Falta: " + faltan.join(", ") + ".";
+        } else {
+          mensaje.className = "ok";
+          mensaje.textContent = "Formulario completo. Ya puede guardar.";
+        }
+      }
+
+      document.addEventListener("input", revisar);
+      document.addEventListener("change", revisar);
+      document.addEventListener("fotos-cambio", revisar);
+      document.addEventListener("firma-cambio", revisar);
+
+      boton.addEventListener("click", function () {
+        revisar();
+        if (boton.disabled) return;
+        window.print();
+      });
+
+      revisar();
     })();
   </script>
 </body>

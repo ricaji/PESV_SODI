@@ -55,6 +55,57 @@
       font-size: 1.25em;
       margin-bottom: 6px;
     }
+    /* Formulario */
+    .formulario {
+      margin-top: 28px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid #d5dbe3;
+      border-top: 4px solid #c8102e;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+    .formulario h2 {
+      font-size: 1.1rem;
+      color: #0d3b78;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .campos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px 20px;
+    }
+    .campo {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .campo label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #1f2d3d;
+    }
+    .campo input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 1rem;
+      border: 1px solid #b8c2cf;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #1f2d3d;
+    }
+    .campo input:focus {
+      outline: none;
+      border-color: #c8102e;
+      box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.15);
+    }
+    #placa { text-transform: uppercase; }
+    @media (max-width: 640px) {
+      .campos { grid-template-columns: 1fr; }
+      .formulario { padding: 18px; }
+    }
   </style>
 </head>
 <body>
@@ -63,6 +114,91 @@
   </header>
   <main>
     <h1 class="titulo"><span>PESV</span>PREOPERACIONAL DE VEHÍCULOS</h1>
+
+    <form class="formulario" id="preoperacional" autocomplete="off">
+      <h2>Datos generales</h2>
+      <div class="campos">
+        <div class="campo">
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" name="fecha" required>
+        </div>
+        <div class="campo">
+          <label for="hora">Hora de inspección</label>
+          <input type="time" id="hora" name="hora" required>
+        </div>
+        <div class="campo">
+          <label for="placa">Placa</label>
+          <input type="text" id="placa" name="placa" maxlength="7" placeholder="ABC123" required>
+        </div>
+        <div class="campo">
+          <label for="tipo_vehiculo">Tipo de vehículo</label>
+          <input type="text" id="tipo_vehiculo" name="tipo_vehiculo" list="tipos" required>
+          <datalist id="tipos">
+            <option value="Tractocamión">
+            <option value="Camión sencillo">
+            <option value="Doble troque">
+            <option value="Furgón">
+            <option value="Volqueta">
+            <option value="Camioneta">
+          </datalist>
+        </div>
+        <div class="campo">
+          <label for="marca">Marca</label>
+          <input type="text" id="marca" name="marca" required>
+        </div>
+        <div class="campo">
+          <label for="modelo">Modelo</label>
+          <input type="number" id="modelo" name="modelo" min="1950" max="2100" placeholder="Año" required>
+        </div>
+        <div class="campo">
+          <label for="kilometraje">Kilometraje</label>
+          <input type="number" id="kilometraje" name="kilometraje" min="0" inputmode="numeric" required>
+        </div>
+        <div class="campo">
+          <label for="conductor">Conductor</label>
+          <input type="text" id="conductor" name="conductor" required>
+        </div>
+        <div class="campo">
+          <label for="cedula">Cédula</label>
+          <input type="text" id="cedula" name="cedula" inputmode="numeric" pattern="[0-9]+" required>
+        </div>
+        <div class="campo">
+          <label for="empresa">Empresa / propietario</label>
+          <input type="text" id="empresa" name="empresa" required>
+        </div>
+        <div class="campo">
+          <label for="cliente">Cliente / servicio</label>
+          <input type="text" id="cliente" name="cliente" required>
+        </div>
+        <div class="campo">
+          <label for="origen">Origen</label>
+          <input type="text" id="origen" name="origen" required>
+        </div>
+        <div class="campo">
+          <label for="destino">Destino</label>
+          <input type="text" id="destino" name="destino" required>
+        </div>
+        <div class="campo">
+          <label for="tipo_carga">Tipo de carga</label>
+          <input type="text" id="tipo_carga" name="tipo_carga" required>
+        </div>
+        <div class="campo">
+          <label for="responsable">Responsable inspección</label>
+          <input type="text" id="responsable" name="responsable" required>
+        </div>
+      </div>
+    </form>
   </main>
+
+  <script>
+    // Fecha y hora actuales por defecto
+    (function () {
+      var ahora = new Date();
+      var p = function (n) { return String(n).padStart(2, "0"); };
+      document.getElementById("fecha").value =
+        ahora.getFullYear() + "-" + p(ahora.getMonth() + 1) + "-" + p(ahora.getDate());
+      document.getElementById("hora").value = p(ahora.getHours()) + ":" + p(ahora.getMinutes());
+    })();
+  </script>
 </body>
 </html>

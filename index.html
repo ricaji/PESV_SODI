@@ -102,6 +102,7 @@
       box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.15);
     }
     #placa { text-transform: uppercase; }
+    .campo label .obligatorio { color: #e30613; }
     /* Módulos de inspección */
     .modulos {
       margin-top: 28px;
@@ -489,19 +490,19 @@
       <h2>Datos generales</h2>
       <div class="campos">
         <div class="campo">
-          <label for="fecha">Fecha</label>
+          <label for="fecha">Fecha <span class="obligatorio">*</span></label>
           <input type="date" id="fecha" name="fecha" required>
         </div>
         <div class="campo">
-          <label for="hora">Hora De Inspección</label>
+          <label for="hora">Hora De Inspección <span class="obligatorio">*</span></label>
           <input type="time" id="hora" name="hora" required>
         </div>
         <div class="campo">
-          <label for="placa">Placa</label>
+          <label for="placa">Placa <span class="obligatorio">*</span></label>
           <input type="text" id="placa" name="placa" maxlength="7" required placeholder="Ej: ABC123">
         </div>
         <div class="campo">
-          <label for="tipo_vehiculo">Tipo De Vehículo</label>
+          <label for="tipo_vehiculo">Tipo De Vehículo <span class="obligatorio">*</span></label>
           <input type="text" id="tipo_vehiculo" name="tipo_vehiculo" list="tipos" required placeholder="Ej: Tractocamión">
           <datalist id="tipos">
             <option value="Tractocamión">
@@ -513,47 +514,47 @@
           </datalist>
         </div>
         <div class="campo">
-          <label for="marca">Marca</label>
+          <label for="marca">Marca <span class="obligatorio">*</span></label>
           <input type="text" id="marca" name="marca" required placeholder="Ej: Kenworth">
         </div>
         <div class="campo">
-          <label for="modelo">Modelo</label>
+          <label for="modelo">Modelo <span class="obligatorio">*</span></label>
           <input type="number" id="modelo" name="modelo" min="1950" max="2100" required placeholder="Ej: 2020">
         </div>
         <div class="campo">
-          <label for="kilometraje">Kilometraje</label>
+          <label for="kilometraje">Kilometraje <span class="obligatorio">*</span></label>
           <input type="number" id="kilometraje" name="kilometraje" min="0" inputmode="numeric" required placeholder="Ej: 125000">
         </div>
         <div class="campo">
-          <label for="conductor">Conductor</label>
+          <label for="conductor">Conductor <span class="obligatorio">*</span></label>
           <input type="text" id="conductor" name="conductor" required placeholder="Ej: Juan Pérez">
         </div>
         <div class="campo">
-          <label for="cedula">Cédula</label>
+          <label for="cedula">Cédula <span class="obligatorio">*</span></label>
           <input type="text" id="cedula" name="cedula" inputmode="numeric" pattern="[0-9]+" required placeholder="Ej: 1234567890">
         </div>
         <div class="campo">
-          <label for="empresa">Empresa/Propietario</label>
+          <label for="empresa">Empresa/Propietario <span class="obligatorio">*</span></label>
           <input type="text" id="empresa" name="empresa" required placeholder="Ej: Sodicarga S.A.S">
         </div>
         <div class="campo">
-          <label for="cliente">Cliente/Servicio</label>
+          <label for="cliente">Cliente/Servicio <span class="obligatorio">*</span></label>
           <input type="text" id="cliente" name="cliente" required placeholder="Ej: Transporte de mercancía">
         </div>
         <div class="campo">
-          <label for="origen">Origen</label>
+          <label for="origen">Origen <span class="obligatorio">*</span></label>
           <input type="text" id="origen" name="origen" required placeholder="Ej: Barranquilla">
         </div>
         <div class="campo">
-          <label for="destino">Destino</label>
+          <label for="destino">Destino <span class="obligatorio">*</span></label>
           <input type="text" id="destino" name="destino" required placeholder="Ej: Bogotá">
         </div>
         <div class="campo">
-          <label for="tipo_carga">Tipo De Carga</label>
+          <label for="tipo_carga">Tipo De Carga <span class="obligatorio">*</span></label>
           <input type="text" id="tipo_carga" name="tipo_carga" required placeholder="Ej: Carga seca">
         </div>
         <div class="campo">
-          <label for="responsable">Responsable Inspección</label>
+          <label for="responsable">Responsable Inspección <span class="obligatorio">*</span></label>
           <input type="text" id="responsable" name="responsable" required placeholder="Ej: María Gómez">
         </div>
       </div>

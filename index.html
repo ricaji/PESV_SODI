@@ -11,11 +11,19 @@
       font-family: Arial, Helvetica, sans-serif;
       color: #1f2d3d;
       background-color: #ffffff;
+    }
+    /* Logo de fondo tenue (marca de agua) */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
       background-image: url("fondo-logo-sodicarga.png");
       background-repeat: no-repeat;
       background-position: center center;
-      background-attachment: fixed;
       background-size: min(60vw, 700px) auto;
+      opacity: 0.12;
     }
     header {
       width: 100%;

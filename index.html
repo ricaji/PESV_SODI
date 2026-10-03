@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PESV - Sodicarga S.A.S</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { min-height: 100%; }
@@ -1052,27 +1053,83 @@
         return aammdd + " PESV " + placa + " " + hhmm + ".pdf";
       }
 
-      function crearPDF(nombre) {
-        return html2pdf().set({
-          margin: [8, 8, 8, 8],
-          filename: nombre,
-          image: { type: "jpeg", quality: 0.85 },
-          html2canvas: { scale: 1.5, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: 755 },
-          jsPDF: { unit: "mm", format: "letter", orientation: "portrait" },
-          pagebreak: { mode: ["css", "legacy"], avoid: [".item", ".resumen", ".firmas", ".miniatura"] }
-        }).from(document.body);
-      }
+      // Genera el PDF en tamaño carta sin cortar ningún bloque entre páginas.
+      // 1) Se mide la posición de cada bloque (preguntas, campos, firmas, etc.)
+      // 2) Cada página termina justo antes del primer bloque que no cabe completo
+      function generarPDF() {
+        var ANCHO = 755;                          // px = ancho útil de la hoja carta
+        var MARGEN = 8;                           // mm
+        var UTIL_W = 215.9 - 2 * MARGEN, UTIL_H = 279.4 - 2 * MARGEN;
+        var PX_MM = ANCHO / UTIL_W;
+        var ALTO_PAG = Math.floor(UTIL_H * PX_MM);
+        var base = { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: ANCHO, scrollX: 0, scrollY: 0 };
 
-      function enModoPDF(tarea) {
+        function medir(doc) {
+          var y0 = doc.body.getBoundingClientRect().top;
+          var q = function (s) { return Array.prototype.slice.call(doc.querySelectorAll(s)); };
+          function caja(a, b) {
+            var r1 = a.getBoundingClientRect(), r2 = (b || a).getBoundingClientRect();
+            return { top: r1.top - y0, bottom: r2.bottom - y0 };
+          }
+          var bloques = [];
+          q("header, .titulo, .resumen, .firmas").forEach(function (el) { bloques.push(caja(el)); });
+          var campos = q(".campo"), f2 = doc.querySelector(".formulario h2");
+          if (f2 && campos[0]) bloques.push(caja(f2, campos[0]));
+          campos.forEach(function (el) { bloques.push(caja(el)); });
+          var m2 = doc.querySelector(".modulos > h2"), grid = doc.querySelector(".grid-modulos");
+          if (m2 && grid) bloques.push(caja(m2, grid));
+          q(".detalle").forEach(function (d) {
+            if (d.offsetHeight === 0) return;
+            var items = d.querySelectorAll(".item, .sin-preguntas");
+            if (items[0]) bloques.push(caja(d.querySelector("h3"), items[0]));
+            Array.prototype.forEach.call(items, function (it) { bloques.push(caja(it)); });
+          });
+          var fh = doc.querySelector(".fotos h2"), mins = q(".miniatura");
+          if (fh) bloques.push(caja(fh, mins[0] || doc.querySelector(".fotos .ayuda")));
+          mins.forEach(function (el) { bloques.push(caja(el)); });
+          return { total: doc.body.scrollHeight, bloques: bloques.filter(function (b) { return b.bottom > b.top; }) };
+        }
+
         document.body.classList.add("modo-pdf");
         window.scrollTo(0, 0);
-        return Promise.resolve().then(tarea).then(function (r) {
+        var medida = null, cortes = [];
+        var pdf = new window.jspdf.jsPDF({ unit: "mm", format: "letter", orientation: "portrait" });
+
+        return html2canvas(document.body, Object.assign({}, base, {
+          scale: 0.1, x: 0, y: 0, width: ANCHO, height: 10,
+          onclone: function (d) { medida = medir(d); }
+        })).then(function () {
+          var ini = 0, total = medida.total;
+          while (ini < total - 2) {
+            var fin = Math.min(ini + ALTO_PAG, total);
+            if (fin < total) {
+              var cruzan = medida.bloques.filter(function (b) { return b.top > ini + 1 && b.top < fin && b.bottom > fin; });
+              if (cruzan.length) fin = Math.min.apply(null, cruzan.map(function (b) { return b.top; })) - 6;
+            }
+            cortes.push([ini, fin]);
+            ini = fin;
+          }
+          var cadena = Promise.resolve();
+          cortes.forEach(function (c, i) {
+            cadena = cadena.then(function () {
+              return html2canvas(document.body, Object.assign({}, base, { x: 0, y: c[0], width: ANCHO, height: c[1] - c[0] }));
+            }).then(function (canvas) {
+              if (i > 0) pdf.addPage();
+              pdf.addImage(canvas.toDataURL("image/jpeg", 0.85), "JPEG", MARGEN, MARGEN, UTIL_W, (c[1] - c[0]) / PX_MM);
+            });
+          });
+          return cadena;
+        }).then(function () {
           document.body.classList.remove("modo-pdf");
-          return r;
-        }, function (e) {
+          return pdf;
+        }, function (err) {
           document.body.classList.remove("modo-pdf");
-          throw e;
+          throw err;
         });
+      }
+
+      function librerias() {
+        return typeof html2canvas !== "undefined" && window.jspdf && window.jspdf.jsPDF;
       }
 
       function bloquear(btn, texto) {
@@ -1093,7 +1150,7 @@
       boton.addEventListener("click", function () {
         revisar();
         if (boton.disabled || ocupado) return;
-        if (typeof html2pdf === "undefined") {
+        if (!librerias()) {
           mensaje.className = "";
           mensaje.textContent = "No se pudo generar el PDF. Revise la conexión a internet e intente de nuevo.";
           return;
@@ -1103,7 +1160,8 @@
         mensaje.className = "";
         mensaje.textContent = "Generando el PDF y guardándolo en Drive, por favor espere...";
 
-        enModoPDF(function () { return crearPDF(nombre).outputPdf("datauristring"); })
+        generarPDF()
+          .then(function (pdf) { return pdf.output("datauristring"); })
           .then(function (uri) {
             return fetch(URL_DRIVE, {
               method: "POST",
@@ -1128,10 +1186,11 @@
       btnImprimir.addEventListener("click", function () {
         revisar();
         if (btnImprimir.disabled || ocupado) return;
-        if (typeof html2pdf === "undefined") { window.print(); return; }
+        if (!librerias()) { window.print(); return; }
         var nombre = nombreArchivo();
         bloquear(btnImprimir, "Generando PDF...");
-        enModoPDF(function () { return crearPDF(nombre).save(); })
+        generarPDF()
+          .then(function (pdf) { pdf.save(nombre); })
           .then(liberar)
           .catch(function () {
             liberar();

@@ -573,6 +573,11 @@
         paneles[nombre] = panel;
         panel.addEventListener("change", function () { actualizarConteo(boton, panel); });
         boton.addEventListener("click", function () {
+          // Si el módulo ya está abierto, solo se ocultan las preguntas (el color no cambia)
+          if (boton.classList.contains("activo") && !panel.hidden) {
+            panel.hidden = true;
+            return;
+          }
           botones.forEach(function (b) { b.classList.remove("activo"); });
           Object.keys(paneles).forEach(function (k) { paneles[k].hidden = true; });
           boton.classList.add("activo");

@@ -220,6 +220,59 @@
     @media (max-width: 640px) {
       .item-campos { grid-template-columns: 1fr; }
     }
+    /* Resumen de calificación */
+    .resumen {
+      margin-top: 28px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid #d5dbe3;
+      border-radius: 10px;
+      padding: 16px 20px 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+    .resumen h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #000000;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #b8c2cf;
+    }
+    .grid-resumen {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+    }
+    .tarjeta {
+      background: #ffffff;
+      border: 1px solid #b8c2cf;
+      border-radius: 6px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .tarjeta .etiqueta {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #000000;
+      margin-bottom: 4px;
+    }
+    .tarjeta .valor {
+      display: block;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .v-total { color: #c8102e; }
+    .v-cumple { color: #1e9e3a; }
+    .v-nocumple { color: #c8102e; }
+    .v-noaplica { color: #e0a000; }
+    .v-sin { color: #6b6b6b; }
+    .v-porc { color: #0e9fb3; }
+    @media (max-width: 900px) {
+      .grid-resumen { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .grid-resumen { grid-template-columns: repeat(2, 1fr); }
+    }
     @media (max-width: 900px) {
       .grid-modulos { grid-template-columns: repeat(3, 1fr); }
     }
@@ -328,6 +381,18 @@
         <button type="button" class="modulo">Control Seguridad/Trazabilidad<span class="conteo">0/9</span></button>
       </div>
       <div id="detalles"></div>
+    </section>
+
+    <section class="resumen">
+      <h2>Resumen de Calificación del Checklist</h2>
+      <div class="grid-resumen">
+        <div class="tarjeta"><span class="etiqueta">Total Ítems</span><span class="valor v-total" id="r-total">0</span></div>
+        <div class="tarjeta"><span class="etiqueta">Cumple</span><span class="valor v-cumple" id="r-cumple">0</span></div>
+        <div class="tarjeta"><span class="etiqueta">No Cumple</span><span class="valor v-nocumple" id="r-nocumple">0</span></div>
+        <div class="tarjeta"><span class="etiqueta">No Aplica</span><span class="valor v-noaplica" id="r-noaplica">0</span></div>
+        <div class="tarjeta"><span class="etiqueta">Sin responder</span><span class="valor v-sin" id="r-sin">0</span></div>
+        <div class="tarjeta"><span class="etiqueta">% Cumplimiento</span><span class="valor v-porc" id="r-porc">0.0%</span></div>
+      </div>
     </section>
   </main>
 
@@ -514,6 +579,32 @@
           panel.hidden = false;
         });
       });
+    })();
+  </script>
+  <script>
+    // Resumen de calificación del checklist
+    (function () {
+      var detalles = document.getElementById("detalles");
+      function calcular() {
+        var selects = detalles.querySelectorAll("select");
+        var c = { total: selects.length, cumple: 0, nocumple: 0, noaplica: 0, sin: 0 };
+        selects.forEach(function (s) {
+          if (s.value === "Cumple") c.cumple++;
+          else if (s.value === "No cumple") c.nocumple++;
+          else if (s.value === "No aplica") c.noaplica++;
+          else c.sin++;
+        });
+        var aplicables = c.total - c.noaplica;
+        var porc = aplicables > 0 ? (c.cumple / aplicables) * 100 : 0;
+        document.getElementById("r-total").textContent = c.total;
+        document.getElementById("r-cumple").textContent = c.cumple;
+        document.getElementById("r-nocumple").textContent = c.nocumple;
+        document.getElementById("r-noaplica").textContent = c.noaplica;
+        document.getElementById("r-sin").textContent = c.sin;
+        document.getElementById("r-porc").textContent = porc.toFixed(1) + "%";
+      }
+      detalles.addEventListener("change", calcular);
+      calcular();
     })();
   </script>
 </body>

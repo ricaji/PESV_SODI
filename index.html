@@ -997,8 +997,10 @@
     (function () {
       var boton = document.getElementById("btn-guardar");
       var mensaje = document.getElementById("mensaje-guardar");
+      var ocupado = false;
 
       function revisar() {
+        if (ocupado) return;
         var faltan = [];
         var datos = 0;
         document.querySelectorAll("#preoperacional .campo input").forEach(function (i) {
@@ -1026,46 +1028,102 @@
       document.addEventListener("fotos-cambio", revisar);
       document.addEventListener("firma-cambio", revisar);
 
+      // Dirección del servicio de Google (Apps Script) que guarda el PDF en Drive
+      var URL_DRIVE = "https://script.google.com/macros/s/AKfycbzgBPZxaCbJ0hxHmktyjJb1-YwhecAlCtcomXfwkJgRVcqUov0W2EVlUaCLUNlzi9l56g/exec";
+      var btnImprimir = document.getElementById("btn-imprimir");
+
+      function nombreArchivo() {
+        var placa = (document.getElementById("placa").value || "vehiculo").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+        var fecha = document.getElementById("fecha").value || "";
+        var hora = (document.getElementById("hora").value || "").replace(":", "");
+        return "Preoperacional_" + placa + (fecha ? "_" + fecha : "") + (hora ? "_" + hora : "") + ".pdf";
+      }
+
+      function crearPDF(nombre) {
+        return html2pdf().set({
+          margin: [8, 8, 8, 8],
+          filename: nombre,
+          image: { type: "jpeg", quality: 0.85 },
+          html2canvas: { scale: 1.5, useCORS: true, scrollY: 0 },
+          jsPDF: { unit: "mm", format: "letter", orientation: "portrait" },
+          pagebreak: { mode: ["css", "legacy"], avoid: [".item", ".tarjeta", ".firma", ".miniatura"] }
+        }).from(document.body);
+      }
+
+      function enModoPDF(tarea) {
+        document.body.classList.add("modo-pdf");
+        window.scrollTo(0, 0);
+        return Promise.resolve().then(tarea).then(function (r) {
+          document.body.classList.remove("modo-pdf");
+          return r;
+        }, function (e) {
+          document.body.classList.remove("modo-pdf");
+          throw e;
+        });
+      }
+
+      function bloquear(btn, texto) {
+        ocupado = true;
+        boton.disabled = true;
+        btnImprimir.disabled = true;
+        btn.textContent = texto;
+      }
+
+      function liberar() {
+        ocupado = false;
+        boton.textContent = "Guardar";
+        btnImprimir.textContent = "Imprimir";
+        revisar();
+      }
+
+      // Guardar: genera el PDF y lo envía a la carpeta de Google Drive
       boton.addEventListener("click", function () {
         revisar();
-        if (boton.disabled) return;
-        mensaje.className = "ok";
-        mensaje.textContent = "Formulario completo y validado.";
+        if (boton.disabled || ocupado) return;
+        if (typeof html2pdf === "undefined") {
+          mensaje.className = "";
+          mensaje.textContent = "No se pudo generar el PDF. Revise la conexión a internet e intente de nuevo.";
+          return;
+        }
+        var nombre = nombreArchivo();
+        bloquear(boton, "Guardando...");
+        mensaje.className = "";
+        mensaje.textContent = "Generando el PDF y guardándolo en Drive, por favor espere...";
+
+        enModoPDF(function () { return crearPDF(nombre).outputPdf("datauristring"); })
+          .then(function (uri) {
+            return fetch(URL_DRIVE, {
+              method: "POST",
+              body: JSON.stringify({ nombre: nombre, pdf: uri.split(",")[1] })
+            });
+          })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res.ok) throw new Error(res.error || "Error al guardar");
+            liberar();
+            mensaje.className = "ok";
+            mensaje.textContent = "Guardado en Drive: " + res.nombre;
+          })
+          .catch(function () {
+            liberar();
+            mensaje.className = "";
+            mensaje.textContent = "No se pudo guardar en Drive. Revise la conexión e intente de nuevo.";
+          });
       });
 
       // Imprimir: genera y descarga el PDF (mismas condiciones que Guardar)
-      var btnImprimir = document.getElementById("btn-imprimir");
       btnImprimir.addEventListener("click", function () {
         revisar();
-        if (btnImprimir.disabled) return;
+        if (btnImprimir.disabled || ocupado) return;
         if (typeof html2pdf === "undefined") { window.print(); return; }
-
-        var placa = (document.getElementById("placa").value || "vehiculo").trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-        var fecha = document.getElementById("fecha").value || "";
-        var nombre = "Preoperacional_" + placa + (fecha ? "_" + fecha : "") + ".pdf";
-
-        btnImprimir.disabled = true;
-        btnImprimir.textContent = "Generando PDF...";
-        document.body.classList.add("modo-pdf");
-        window.scrollTo(0, 0);
-
-        function terminar() {
-          document.body.classList.remove("modo-pdf");
-          btnImprimir.textContent = "Imprimir";
-          revisar();
-        }
-
-        html2pdf().set({
-          margin: [8, 8, 8, 8],
-          filename: nombre,
-          image: { type: "jpeg", quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-          jsPDF: { unit: "mm", format: "letter", orientation: "portrait" },
-          pagebreak: { mode: ["css", "legacy"], avoid: [".item", ".tarjeta", ".firma", ".miniatura"] }
-        }).from(document.body).save().then(terminar).catch(function () {
-          terminar();
-          window.print();
-        });
+        var nombre = nombreArchivo();
+        bloquear(btnImprimir, "Generando PDF...");
+        enModoPDF(function () { return crearPDF(nombre).save(); })
+          .then(liberar)
+          .catch(function () {
+            liberar();
+            window.print();
+          });
       });
 
       revisar();

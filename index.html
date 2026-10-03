@@ -147,6 +147,70 @@
       font-weight: 400;
       color: #000000;
     }
+    .modulo.activo {
+      background: #ffd400;
+      border-color: #d4a900;
+    }
+    .modulo.activo:hover { background: #ffdb2e; }
+    /* Detalle del módulo */
+    .detalle {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid #d5dbe3;
+      border-radius: 10px;
+      padding: 16px 18px 18px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+    .detalle[hidden] { display: none; }
+    .detalle h3 {
+      font-size: 1rem;
+      color: #1a73c9;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #d5dbe3;
+    }
+    .item {
+      border: 1px solid #d5dbe3;
+      border-radius: 6px;
+      padding: 10px 10px 12px;
+      margin-bottom: 10px;
+      background: #ffffff;
+    }
+    .item p {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #000000;
+      margin-bottom: 8px;
+    }
+    .item-campos {
+      display: grid;
+      grid-template-columns: 120px 1fr 1fr;
+      gap: 6px;
+    }
+    .item-campos select,
+    .item-campos input {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border: 1px solid #b8c2cf;
+      border-radius: 4px;
+      background: #ffffff;
+      color: #000000;
+    }
+    .item-campos select:focus,
+    .item-campos input:focus {
+      outline: none;
+      border-color: #1a73c9;
+      box-shadow: 0 0 0 3px rgba(26, 115, 201, 0.15);
+    }
+    .sin-preguntas {
+      font-size: 0.9rem;
+      color: #555555;
+    }
+    @media (max-width: 640px) {
+      .item-campos { grid-template-columns: 1fr; }
+    }
     @media (max-width: 900px) {
       .grid-modulos { grid-template-columns: repeat(3, 1fr); }
     }
@@ -254,6 +318,7 @@
         <button type="button" class="modulo">Compartimiento Carga<span class="conteo">0/12</span></button>
         <button type="button" class="modulo">Control Seguridad/Trazabilidad<span class="conteo">0/9</span></button>
       </div>
+      <div id="detalles"></div>
     </section>
   </main>
 
@@ -265,6 +330,78 @@
       document.getElementById("fecha").value =
         ahora.getFullYear() + "-" + p(ahora.getMonth() + 1) + "-" + p(ahora.getDate());
       document.getElementById("hora").value = p(ahora.getHours()) + ":" + p(ahora.getMinutes());
+    })();
+  </script>
+  <script>
+    // Módulos de inspección
+    (function () {
+      var preguntas = {
+        "Documentación": [
+          "Licencia de tránsito disponible y vigente",
+          "SOAT vigente",
+          "Revisión técnico-mecánica vigente, cuando aplique",
+          "Licencia de conducción vigente y categoría correspondiente",
+          "Documentos adicionales exigidos para la operación",
+          "Documentación de la carga disponible"
+        ]
+      };
+      var botones = document.querySelectorAll(".modulo");
+      var contenedor = document.getElementById("detalles");
+      var paneles = {};
+
+      function crearPanel(nombre, total) {
+        var panel = document.createElement("div");
+        panel.className = "detalle";
+        panel.hidden = true;
+        var h3 = document.createElement("h3");
+        h3.textContent = "Detalle: " + nombre;
+        panel.appendChild(h3);
+        var lista = preguntas[nombre];
+        if (!lista) {
+          var p = document.createElement("p");
+          p.className = "sin-preguntas";
+          p.textContent = "Las " + total + " preguntas de este módulo están pendientes por definir.";
+          panel.appendChild(p);
+        } else {
+          lista.forEach(function (texto, i) {
+            var item = document.createElement("div");
+            item.className = "item";
+            item.innerHTML =
+              '<p></p>' +
+              '<div class="item-campos">' +
+                '<select><option value="">Seleccione...</option><option>Cumple</option><option>No cumple</option><option>No aplica</option></select>' +
+                '<input type="text" placeholder="Observaciones">' +
+                '<input type="text" placeholder="Acción/responsable">' +
+              '</div>';
+            item.querySelector("p").textContent = (i + 1) + ". " + texto;
+            panel.appendChild(item);
+          });
+        }
+        contenedor.appendChild(panel);
+        return panel;
+      }
+
+      function actualizarConteo(boton, panel) {
+        var selects = panel.querySelectorAll("select");
+        if (!selects.length) return;
+        var respondidas = 0;
+        selects.forEach(function (s) { if (s.value) respondidas++; });
+        boton.querySelector(".conteo").textContent = respondidas + "/" + selects.length;
+      }
+
+      botones.forEach(function (boton) {
+        var nombre = boton.firstChild.textContent.trim();
+        var total = boton.querySelector(".conteo").textContent.split("/")[1];
+        var panel = crearPanel(nombre, total);
+        paneles[nombre] = panel;
+        panel.addEventListener("change", function () { actualizarConteo(boton, panel); });
+        boton.addEventListener("click", function () {
+          botones.forEach(function (b) { b.classList.remove("activo"); });
+          Object.keys(paneles).forEach(function (k) { paneles[k].hidden = true; });
+          boton.classList.add("activo");
+          panel.hidden = false;
+        });
+      });
     })();
   </script>
 </body>

@@ -288,7 +288,11 @@
       color: #000000;
       margin-bottom: 8px;
     }
-    .fotos h2 .obligatorio { color: #e30613; }
+    .fotos h2 .opcional {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: #777777;
+    }
     .fotos .ayuda {
       font-size: 0.8rem;
       color: #555555;
@@ -585,8 +589,8 @@
     </section>
 
     <section class="fotos">
-      <h2>Registro Fotográfico <span class="obligatorio">*</span></h2>
-      <p class="ayuda">Obligatorio: tome al menos una foto con la cámara del celular o súbala desde su dispositivo</p>
+      <h2>Registro Fotográfico <span class="opcional">(opcional)</span></h2>
+      <p class="ayuda">Tome fotos con la cámara del celular o súbalas desde su dispositivo</p>
       <button type="button" class="btn-fotos" id="btn-fotos">Tomar o Subir Fotos</button>
       <input type="file" id="input-fotos" accept="image/*" multiple>
       <p class="conteo-fotos" id="conteo-fotos">No se han agregado fotos</p>
@@ -993,7 +997,6 @@
         var items = 0;
         document.querySelectorAll("#detalles select").forEach(function (s) { if (!s.value) items++; });
         if (items) faltan.push(items + (items === 1 ? " ítem por evaluar" : " ítems por evaluar"));
-        if (!window.obtenerFotos || window.obtenerFotos().length === 0) faltan.push("al menos 1 foto");
         if (!window.firmas["firma-conductor"].firmado) faltan.push("firma del conductor");
 
         boton.disabled = faltan.length > 0;

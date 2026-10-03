@@ -273,6 +273,81 @@
     @media (max-width: 640px) {
       .grid-resumen { grid-template-columns: repeat(2, 1fr); }
     }
+    /* Registro fotográfico */
+    .fotos {
+      margin-top: 28px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 2px dashed #b8cbe0;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .fotos h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #000000;
+      margin-bottom: 8px;
+    }
+    .fotos h2 .obligatorio { color: #e30613; }
+    .fotos .ayuda {
+      font-size: 0.8rem;
+      color: #555555;
+      margin-bottom: 14px;
+    }
+    .btn-fotos {
+      display: inline-block;
+      background: #e30613;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 22px;
+      cursor: pointer;
+    }
+    .btn-fotos:hover { background: #c20510; }
+    .fotos input[type="file"] { display: none; }
+    .fotos .conteo-fotos {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: #000000;
+    }
+    .galeria {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .galeria:empty { display: none; }
+    .miniatura {
+      position: relative;
+      border: 1px solid #d5dbe3;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #ffffff;
+      aspect-ratio: 1 / 1;
+    }
+    .miniatura img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .miniatura button {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.65);
+      color: #ffffff;
+      font-size: 14px;
+      line-height: 24px;
+      cursor: pointer;
+    }
     @media (max-width: 900px) {
       .grid-modulos { grid-template-columns: repeat(3, 1fr); }
     }
@@ -393,6 +468,15 @@
         <div class="tarjeta"><span class="etiqueta">Sin responder</span><span class="valor v-sin" id="r-sin">0</span></div>
         <div class="tarjeta"><span class="etiqueta">% Cumplimiento</span><span class="valor v-porc" id="r-porc">0.0%</span></div>
       </div>
+    </section>
+
+    <section class="fotos">
+      <h2>Registro Fotográfico <span class="obligatorio">*</span></h2>
+      <p class="ayuda">Obligatorio: tome al menos una foto con la cámara del celular o súbala desde su dispositivo</p>
+      <button type="button" class="btn-fotos" id="btn-fotos">Tomar o Subir Fotos</button>
+      <input type="file" id="input-fotos" accept="image/*" multiple>
+      <p class="conteo-fotos" id="conteo-fotos">No se han agregado fotos</p>
+      <div class="galeria" id="galeria"></div>
     </section>
   </main>
 
@@ -610,6 +694,55 @@
       }
       detalles.addEventListener("change", calcular);
       calcular();
+    })();
+  </script>
+  <script>
+    // Registro fotográfico
+    (function () {
+      var fotos = [];
+      var input = document.getElementById("input-fotos");
+      var galeria = document.getElementById("galeria");
+      var conteo = document.getElementById("conteo-fotos");
+
+      document.getElementById("btn-fotos").addEventListener("click", function () {
+        input.click();
+      });
+
+      input.addEventListener("change", function () {
+        Array.prototype.forEach.call(input.files, function (archivo) {
+          if (archivo.type.indexOf("image/") === 0) fotos.push(archivo);
+        });
+        input.value = "";
+        mostrar();
+      });
+
+      function mostrar() {
+        galeria.innerHTML = "";
+        fotos.forEach(function (archivo, i) {
+          var div = document.createElement("div");
+          div.className = "miniatura";
+          var img = document.createElement("img");
+          img.src = URL.createObjectURL(archivo);
+          img.alt = archivo.name;
+          img.onload = function () { URL.revokeObjectURL(img.src); };
+          var quitar = document.createElement("button");
+          quitar.type = "button";
+          quitar.title = "Quitar foto";
+          quitar.textContent = "\u00d7";
+          quitar.addEventListener("click", function () {
+            fotos.splice(i, 1);
+            mostrar();
+          });
+          div.appendChild(img);
+          div.appendChild(quitar);
+          galeria.appendChild(div);
+        });
+        conteo.textContent = fotos.length === 0
+          ? "No se han agregado fotos"
+          : fotos.length + (fotos.length === 1 ? " foto agregada" : " fotos agregadas");
+      }
+
+      window.obtenerFotos = function () { return fotos.slice(); };
     })();
   </script>
 </body>

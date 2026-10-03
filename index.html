@@ -152,6 +152,15 @@
       border-color: #d4a900;
     }
     .modulo.activo:hover { background: #ffdb2e; }
+    /* Módulo completo: verde claro */
+    .modulo.completo {
+      background: #c8f0c8;
+      border-color: #7cc47c;
+    }
+    .modulo.completo:hover { background: #b8eab8; }
+    .modulo.completo.activo {
+      box-shadow: 0 0 0 3px #ffd400;
+    }
     /* Detalle del módulo */
     .detalle {
       margin-top: 20px;
@@ -489,6 +498,7 @@
         var respondidas = 0;
         selects.forEach(function (s) { if (s.value) respondidas++; });
         boton.querySelector(".conteo").textContent = respondidas + "/" + selects.length;
+        boton.classList.toggle("completo", respondidas === selects.length);
       }
 
       botones.forEach(function (boton) {

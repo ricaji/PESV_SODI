@@ -471,6 +471,16 @@
     body.modo-pdf .guardar,
     body.modo-pdf .miniatura button,
     body.modo-pdf .conteo-fotos { display: none !important; }
+    /* En el PDF siempre se usa el diseño de escritorio (ancho útil de la hoja carta) */
+    body.modo-pdf { width: 755px !important; }
+    body.modo-pdf .campos { grid-template-columns: repeat(2, 1fr) !important; }
+    body.modo-pdf .grid-modulos { grid-template-columns: repeat(5, 1fr) !important; }
+    body.modo-pdf .grid-resumen { grid-template-columns: repeat(6, 1fr) !important; }
+    body.modo-pdf .firmas { grid-template-columns: 1fr 1fr !important; }
+    body.modo-pdf .item-campos { grid-template-columns: 120px 1fr 1fr !important; }
+    body.modo-pdf .galeria { grid-template-columns: repeat(2, 1fr) !important; }
+    body.modo-pdf .miniatura { aspect-ratio: auto; }
+    body.modo-pdf .miniatura img { height: auto; object-fit: contain; }
     /* Al imprimir también se muestran todos los módulos */
     @media print {
       .detalle[hidden] { display: block !important; }
@@ -880,9 +890,10 @@
           var div = document.createElement("div");
           div.className = "miniatura";
           var img = document.createElement("img");
-          img.src = URL.createObjectURL(archivo);
           img.alt = archivo.name;
-          img.onload = function () { URL.revokeObjectURL(img.src); };
+          var lector = new FileReader();
+          lector.onload = function () { img.src = lector.result; };
+          lector.readAsDataURL(archivo);
           var quitar = document.createElement("button");
           quitar.type = "button";
           quitar.title = "Quitar foto";
@@ -1046,9 +1057,9 @@
           margin: [8, 8, 8, 8],
           filename: nombre,
           image: { type: "jpeg", quality: 0.85 },
-          html2canvas: { scale: 1.5, useCORS: true, scrollY: 0 },
+          html2canvas: { scale: 1.5, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: 755 },
           jsPDF: { unit: "mm", format: "letter", orientation: "portrait" },
-          pagebreak: { mode: ["css", "legacy"], avoid: [".item", ".tarjeta", ".firma", ".miniatura"] }
+          pagebreak: { mode: ["css", "legacy"], avoid: [".item", ".resumen", ".firmas", ".miniatura"] }
         }).from(document.body);
       }
 

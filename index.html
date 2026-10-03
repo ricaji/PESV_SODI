@@ -102,6 +102,57 @@
       box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.15);
     }
     #placa { text-transform: uppercase; }
+    /* Módulos de inspección */
+    .modulos {
+      margin-top: 28px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid #d5dbe3;
+      border-radius: 10px;
+      padding: 18px 20px 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+    .modulos h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #000000;
+      margin-bottom: 12px;
+    }
+    .grid-modulos {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+    .modulo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 64px;
+      padding: 10px 8px;
+      background: #e3effc;
+      border: 1px solid #a9c8ec;
+      border-radius: 8px;
+      color: #000000;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .modulo:hover { background: #d2e5fa; border-color: #7fb0e6; }
+    .modulo .conteo {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: #000000;
+    }
+    @media (max-width: 900px) {
+      .grid-modulos { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .grid-modulos { grid-template-columns: repeat(2, 1fr); }
+    }
     @media (max-width: 640px) {
       .campos { grid-template-columns: 1fr; }
       .formulario { padding: 18px; }
@@ -188,6 +239,22 @@
         </div>
       </div>
     </form>
+
+    <section class="modulos">
+      <h2>Selección de Módulos de Inspección</h2>
+      <div class="grid-modulos">
+        <button type="button" class="modulo">Documentación<span class="conteo">0/6</span></button>
+        <button type="button" class="modulo">Estado Exterior<span class="conteo">0/11</span></button>
+        <button type="button" class="modulo">Llantas<span class="conteo">0/9</span></button>
+        <button type="button" class="modulo">Iluminación y señalización<span class="conteo">0/10</span></button>
+        <button type="button" class="modulo">Sistemas Mecánicos<span class="conteo">0/9</span></button>
+        <button type="button" class="modulo">Fluidos<span class="conteo">0/7</span></button>
+        <button type="button" class="modulo">Seguridad Activa/Pasiva<span class="conteo">0/8</span></button>
+        <button type="button" class="modulo">Equipo Prevención/Seguridad<span class="conteo">0/9</span></button>
+        <button type="button" class="modulo">Compartimiento Carga<span class="conteo">0/12</span></button>
+        <button type="button" class="modulo">Control Seguridad/Trazabilidad<span class="conteo">0/9</span></button>
+      </div>
+    </section>
   </main>
 
   <script>

@@ -409,6 +409,24 @@
       margin-top: 24px;
       text-align: center;
     }
+    .botones-finales {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    #btn-imprimir {
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: #1a73c9;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 46px;
+      cursor: pointer;
+    }
+    #btn-imprimir:hover { background: #155fa6; }
     #btn-guardar {
       font-family: inherit;
       font-size: 1.05rem;
@@ -593,7 +611,10 @@
     </section>
 
     <div class="guardar">
-      <button type="button" id="btn-guardar" disabled>Guardar</button>
+      <div class="botones-finales">
+        <button type="button" id="btn-imprimir">Imprimir</button>
+        <button type="button" id="btn-guardar" disabled>Guardar</button>
+      </div>
       <p id="mensaje-guardar"></p>
     </div>
   </main>
@@ -989,6 +1010,12 @@
       boton.addEventListener("click", function () {
         revisar();
         if (boton.disabled) return;
+        mensaje.className = "ok";
+        mensaje.textContent = "Formulario completo y validado.";
+      });
+
+      // Imprimir o guardar como PDF (disponible en cualquier momento)
+      document.getElementById("btn-imprimir").addEventListener("click", function () {
         window.print();
       });
 
